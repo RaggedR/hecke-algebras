@@ -1,0 +1,13 @@
+meinhold_mult_1344.txt
+meinhold_mult_2016.txt
+*.lake/
+.lake/
+__pycache__/
+*.pyc
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+.DS_Store
+meinhold_mult_2016.txt

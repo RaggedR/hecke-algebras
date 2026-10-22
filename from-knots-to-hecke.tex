@@ -1,0 +1,695 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+\DeclareMathOperator{\End}{End}
+\DeclareMathOperator{\Ind}{Ind}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\GL}{GL}
+
+\title{From Tangled Ropes to the Hecke Algebra:\\
+  Entropy, Knot Invariants, R-Matrices, and Local Rules}
+\author{Robin Langer}
+\date{June 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+These notes trace a thread from the physical question of why ropes tangle
+to the Iwahori--Hecke algebra, quantum groups, and the local rules appearing
+in the bijective proof of Borodin's identity for cylindric plane partitions.
+The central observation is that Fomin's local rules---used in the author's
+PhD thesis to construct weight-preserving bijections on cylindric plane
+partitions---are the combinatorial shadow of R-matrices from the quantum
+inverse scattering method. The commutation relation between Pieri operators
+and their adjoints plays the role of the Yang--Baxter equation, and the
+higher-order function formulation of local rules is the combinatorial
+analogue of the consistency condition that R-matrices must satisfy.
+\end{abstract}
+
+\tableofcontents
+
+%% ══════════════════════════════════════════════════════════════
+\section{Why ropes tangle}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Entropy and conformational space}
+
+Consider a rope of length $L$ confined in a box of side length $D$.
+The rope explores \emph{conformational space}---the set of all spatial
+configurations consistent with its constraints (fixed length, self-avoidance,
+bending stiffness). The key combinatorial observation is:
+
+\begin{quote}
+There are astronomically more knotted configurations than unknotted ones.
+\end{quote}
+
+Unknottedness is a \emph{global} topological constraint: no strand passes
+through any other along the entire length. Knottedness is \emph{local}:
+a single crossing change can create a knot. By entropy---the system evolves
+toward the macrostate with the most microstates---a rope exploring
+configurations at random will almost certainly land in a knotted state.
+
+\subsection{Length dependence}
+
+Raymer and Smith~\cite{RaymerSmith2007} tumbled ropes of various lengths
+in boxes and found:
+\begin{itemize}
+  \item Below ${\sim}0.46\,\text{m}$: almost no knots form.
+  \item Above ${\sim}1.5\,\text{m}$: knot probability approaches $100\%$.
+  \item The transition is sigmoidal with a critical length regime.
+\end{itemize}
+The probability of remaining unknotted decays exponentially:
+\[
+  P(\text{unknotted}) \sim e^{-L/L_0}
+\]
+where $L_0$ is a characteristic length depending on rope stiffness and
+confinement. This is a standard result in the statistical mechanics of
+polymers.
+
+The mathematical reason: a rope of length $L$ in a box of size $D$
+has roughly $L/D$ segments that can cross over each other. The number of
+possible crossing diagrams grows exponentially with the number of
+crossings~$n$, since each crossing can be an over-crossing or
+under-crossing independently, giving $\sim 2^n$ distinct topological states.
+
+\subsection{Knot classification}
+
+Raymer and Smith did not merely detect the presence of knots---they
+\emph{classified} them. After photographing each string configuration,
+they traced the crossing diagram and computed knot invariants (specifically
+the Jones polynomial and HOMFLY polynomial) to identify the knot type:
+trefoils ($3_1$), figure-eights ($4_1$), cinquefoils ($5_1$), and composites
+up to 11 crossings.
+
+The trefoil was the most common. More complex knots appeared with longer
+strings. The distribution of knot types roughly matched predictions from
+random topology models.
+
+\subsection{Why coiling reduces tangling}
+
+A coiled rope tangles far less than a loosely piled rope of the same length.
+This is not merely because coiling ``holds the rope in place'' but because:
+\begin{enumerate}
+  \item \textbf{Reduced effective length.} A coiled rope behaves
+    topologically like a short, thick rope. The relevant length for knot
+    formation is the number of coils, not the length of rope.
+  \item \textbf{Increased bending stiffness.} Each coil constrains local
+    curvature, pre-spending the curvature budget on orderly loops.
+  \item \textbf{Restricted conformation space.} Coiling imposes a
+    low-entropy initial condition. The energy barrier to transitioning from
+    ``neatly coiled'' to ``randomly tangled'' is much higher than from
+    ``loosely piled'' to ``randomly tangled.''
+  \item \textbf{Suppressed crossing number.} For $N$ loops, the maximum
+    crossing number scales as $\sim N$ rather than $\sim N^2$.
+\end{enumerate}
+The same mathematics governs why circular DNA tangles far less than linear
+DNA of the same length---cells exploit this via topoisomerases.
+
+%% ══════════════════════════════════════════════════════════════
+\section{Knot invariants and the Jones polynomial}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Can you count knots?}
+
+Given a tangled rope, one can ask: \emph{how knotted is it?}
+
+Just as integers factor uniquely into primes, knots factor uniquely into
+\emph{prime knots} (Schubert, 1949). A rope with ``two knots in it'' is a
+\emph{composite knot}---the connected sum of two prime knots---and the
+decomposition is unique. So one can count prime knot factors, and the count
+is well-defined.
+
+However, detecting whether a given tangle is knotted at all is
+computationally hard. Unknot recognition is known to be in both NP and
+co-NP, but it is not known to be in~P. In practice one computes invariants:
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+\textbf{Invariant} & \textbf{Distinguishes} & \textbf{Limitation} \\
+\hline
+Crossing number & Minimum crossings needed & Hard to compute \\
+Jones polynomial & Most small knots & Unknown if it detects unknot \\
+HOMFLY polynomial & Strictly stronger than Jones & Can't distinguish all knots \\
+Khovanov homology & Detects the unknot & Exponentially expensive \\
+\hline
+\end{tabular}
+\end{center}
+
+No single invariant distinguishes all knots.
+
+\subsection{Braids and Markov's theorem}
+
+Every knot can be represented as a \emph{closed braid}
+(Alexander, 1923). A braid on $n$ strands is an element of the
+\emph{braid group} $B_n$, generated by $\sigma_1, \ldots, \sigma_{n-1}$
+with relations:
+\begin{align}
+  \sigma_i \sigma_{i+1} \sigma_i &= \sigma_{i+1} \sigma_i \sigma_{i+1}
+    && \text{(braid/Yang--Baxter relation)} \label{eq:braid} \\
+  \sigma_i \sigma_j &= \sigma_j \sigma_i
+    && \text{for } |i-j| \ge 2 \label{eq:comm}
+\end{align}
+Two closed braids represent the same knot if and only if they are related
+by a sequence of \emph{Markov moves}: conjugation within $B_n$ and
+stabilisation between $B_n$ and $B_{n+1}$.
+
+To build a knot invariant, one needs a function on braids invariant under
+both Markov moves.
+
+%% ══════════════════════════════════════════════════════════════
+\section{The Iwahori--Hecke algebra}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Definition}
+
+The symmetric group $S_n$ is generated by adjacent transpositions
+$s_i = (i, i{+}1)$ satisfying $s_i^2 = 1$, the braid relation, and the
+commutativity relation. The \emph{Iwahori--Hecke algebra} $H_n(q)$, over
+$\mathbb{C}(q)$, is generated by $T_1, \ldots, T_{n-1}$ satisfying the
+same braid and commutativity relations, but with $s_i^2 = 1$ replaced by
+the \emph{quadratic relation}:
+\begin{equation} \label{eq:hecke-quad}
+  T_i^2 = (q-1) T_i + q
+\end{equation}
+or equivalently $(T_i - q)(T_i + 1) = 0$.
+At $q = 1$ this reduces to $T_i^2 = 1$, recovering
+$\mathbb{C}[S_n]$.
+
+\subsection{Origin: representations of finite groups of Lie type}
+
+The algebra $H_n(q)$ was not invented for knot theory. It arises naturally
+in the representation theory of finite groups of Lie type (Iwahori, 1964).
+
+Take $G = \GL_n(\mathbb{F}_q)$ and $B$ the Borel subgroup
+(upper triangular matrices). Consider the permutation representation of $G$
+on the flag variety $G/B$. Then:
+\begin{equation} \label{eq:hecke-endo}
+  H_n(q) \cong \End_G\!\left(\Ind_B^G \mathbf{1}\right)
+\end{equation}
+The Hecke algebra is the endomorphism algebra of the induced trivial
+representation. The parameter $q$ is the cardinality of the finite field.
+
+\subsection{Structure}
+
+$H_n(q)$ has dimension $n!$ and, for generic $q$, is semisimple with
+irreducible representations indexed by partitions $\lambda \vdash n$---the
+same indexing as for $S_n$. The $q$-analogue of the Specht module
+$S^\lambda$ gives a representation of $H_n(q)$ of the same dimension.
+
+This is why $H_n(q)$ is called a $q$-deformation of the symmetric group:
+it has the same representation theory, parametrised by~$q$.
+
+%% ══════════════════════════════════════════════════════════════
+\section{Jones's construction}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Step 1: Braids into the Hecke algebra}
+
+There is a natural homomorphism $B_n \to H_n(q)$ sending
+$\sigma_i \mapsto T_i$. This works because the braid relations are a
+subset of the Hecke relations. The quadratic relation makes $T_i$
+invertible:
+\[
+  T_i^{-1} = q^{-1} T_i - (1 - q^{-1})
+\]
+
+\subsection{Step 2: The Markov trace}
+
+Jones (1984) found a unique family of linear functionals
+$\tr : H_n(q) \to \mathbb{C}(q, z)$ satisfying:
+\begin{enumerate}
+  \item $\tr(1) = 1$,
+  \item $\tr(ab) = \tr(ba)$ \quad (trace property),
+  \item $\tr(h\, T_n) = z \cdot \tr(h)$ for all $h \in H_n(q)$
+    \quad (Markov property).
+\end{enumerate}
+Property~(3) ensures invariance under the second Markov move
+(stabilisation).
+
+\subsection{Step 3: The invariant}
+
+For a braid $\beta \in B_n$ whose closure is the knot $K$:
+\[
+  V_K(t) = (\text{normalisation factor}) \cdot \tr\!\left(\rho(\beta)\right)
+\]
+where $\rho : B_n \to H_n(q)$ sends $\sigma_i \mapsto T_i$.
+After a change of variables, this gives the
+\emph{Jones polynomial} $V_K(t) \in \mathbb{Z}[t^{\pm 1/2}]$.
+
+\begin{example}
+Some values:
+\begin{align*}
+  &\text{Unknot:}       && V(t) = 1 \\
+  &\text{Trefoil } 3_1: && V(t) = -t^{-4} + t^{-3} + t^{-1} \\
+  &\text{Figure-eight } 4_1: && V(t) = t^2 - t + 1 - t^{-1} + t^{-2}
+\end{align*}
+\end{example}
+
+\subsection{The surprise: subfactors}
+
+Jones was not studying knots. He was studying \emph{subfactors}---inclusions
+$N \subset M$ of von Neumann algebras. The Jones index $[M:N]$ turned out
+to be quantised: it can only take values in
+$\{4\cos^2(\pi/n) : n \ge 3\} \cup [4, \infty)$.
+
+While analysing the tower of relative commutants, Jones noticed the
+generators satisfied exactly the Hecke algebra relations. The trace came
+from the conditional expectation in the von Neumann algebra. A topologist
+colleague (Joan Birman) pointed out this could yield a knot invariant.
+
+The discovery path was:
+\[
+  \text{Operator algebras} \to \text{Subfactors} \to \text{Hecke algebra}
+  \to \text{Braid representations} \to \text{Knot invariant}
+\]
+
+%% ══════════════════════════════════════════════════════════════
+\section{Quantum groups and the Yang--Baxter equation}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Integrable systems and the Yang--Baxter equation}
+
+The Hecke algebra and Jones polynomial are part of a larger story rooted
+in physics. The \emph{Leningrad school} (Faddeev, Sklyanin, Takhtajan,
+Kulish, Reshetikhin) developed the \emph{quantum inverse scattering method}
+for solving quantum integrable systems (spin chains, lattice models).
+
+The master equation of quantum integrability is the
+\emph{Yang--Baxter equation}: for $R \in \End(V \otimes V)$,
+\begin{equation} \label{eq:ybe}
+  R_{12}\, R_{13}\, R_{23} = R_{23}\, R_{13}\, R_{12}
+\end{equation}
+in $\End(V \otimes V \otimes V)$.
+
+This equation was discovered independently by Yang (1967, solving the
+1D delta-function Bose gas) and Baxter (1972, solving the 8-vertex model
+in statistical mechanics).
+
+\subsection{Quantum groups}
+
+The central question was: \emph{where do R-matrices come from?}
+
+Drinfeld (1985) and Jimbo (1985) independently answered this by defining
+\emph{quantum groups}---Hopf algebra deformations $U_q(\mathfrak{g})$ of
+universal enveloping algebras of semisimple Lie algebras. The simplest
+example is $U_q(\mathfrak{sl}_2)$, with generators $E, F, K, K^{-1}$ and
+relations:
+\begin{align}
+  K E K^{-1} &= q^2 E \\
+  K F K^{-1} &= q^{-2} F \\
+  EF - FE &= \frac{K - K^{-1}}{q - q^{-1}}
+\end{align}
+where $K = q^H$. At $q = 1$ one recovers the classical algebra.
+
+The crucial structure is the \emph{coproduct}
+$\Delta : U_q \to U_q \otimes U_q$:
+\begin{align}
+  \Delta(K) &= K \otimes K \\
+  \Delta(E) &= E \otimes 1 + K \otimes E \\
+  \Delta(F) &= F \otimes K^{-1} + 1 \otimes F
+\end{align}
+This coproduct is \emph{not cocommutative}---the failure of
+cocommutativity is controlled by the R-matrix, which satisfies
+Yang--Baxter automatically.
+
+\subsection{Quantum Schur--Weyl duality}
+
+Classical Schur--Weyl duality says:
+\[
+  \End_{\GL(V)}(V^{\otimes n}) \cong \mathbb{C}[S_n]
+\]
+Deforming $\GL(V)$ to $U_q(\mathfrak{gl}_N)$ deforms $\mathbb{C}[S_n]$
+to $H_n(q)$:
+\[
+  \End_{U_q(\mathfrak{gl}_N)}(V^{\otimes n}) \cong H_n(q)
+\]
+The Hecke algebra is not an arbitrary $q$-deformation---it is the
+\emph{unique} deformation forced by quantum group symmetry.
+
+\subsection{From Jones to HOMFLY}
+
+The Jones polynomial uses $U_q(\mathfrak{sl}_2)$. Replacing
+$\mathfrak{sl}_2$ with $\mathfrak{sl}_N$ gives the \emph{HOMFLY polynomial}
+$P(a,z)$, satisfying the skein relation:
+\[
+  a \, P(L_+) - a^{-1} P(L_-) = z \, P(L_0)
+\]
+The Jones polynomial is $P(t^{-1}, t^{1/2} - t^{-1/2})$;
+the Alexander polynomial is $P(1, t^{1/2} - t^{-1/2})$.
+
+%% ══════════════════════════════════════════════════════════════
+\section{Hall--Littlewood polynomials and the Hecke algebra}
+%% ══════════════════════════════════════════════════════════════
+
+\subsection{Kazhdan--Lusztig theory}
+
+Kazhdan and Lusztig (1979) constructed a distinguished basis $\{C'_w\}$
+for $H_n(q)$ indexed by permutations $w \in S_n$. The change-of-basis
+coefficients are the \emph{Kazhdan--Lusztig polynomials} $P_{x,w}(q)$.
+
+\subsection{Kostka--Foulkes polynomials}
+
+The \emph{Kostka--Foulkes polynomials} $K_{\lambda\mu}(t)$ are the
+transition matrices between Hall--Littlewood polynomials and Schur functions:
+\[
+  s_\lambda(x) = \sum_\mu K_{\lambda\mu}(t)\, P_\mu(x; t)
+\]
+Lusztig (1981) showed that these are special cases of Kazhdan--Lusztig
+polynomials for Grassmannian permutations. Thus the combinatorics of
+Hall--Littlewood polynomials is secretly Hecke algebra combinatorics.
+
+\subsection{Spherical functions on $p$-adic groups}
+
+Hall--Littlewood polynomials also arise as \emph{spherical functions}
+on $p$-adic groups via the Satake isomorphism. For
+$G = \GL_n(\mathbb{Q}_p)$ with maximal compact $K = \GL_n(\mathbb{Z}_p)$,
+the Hecke algebra of $K$-bi-invariant functions on $G$ is isomorphic to the
+ring of symmetric polynomials, and the spherical functions are precisely
+$P_\lambda(x; q^{-1})$.
+
+%% ══════════════════════════════════════════════════════════════
+\section{Local rules as R-matrices}
+%% ══════════════════════════════════════════════════════════════
+
+We now connect the preceding material to the local rules appearing in the
+author's PhD thesis~\cite{Langer2013}, which gave a bijective proof of
+Borodin's identity for cylindric plane partitions.
+
+\subsection{Fomin's local rules}
+
+Fomin's local rules~\cite{Fomin1988} provide a mechanism for filling in
+a growth diagram. Given three partitions $\rho, \mu, \nu$ and a bit
+$x \in \{0,1\}$ arranged as:
+\[
+  \begin{array}{ccc}
+    \rho & & \nu \\
+    & x & \\
+    \mu & & \lambda
+  \end{array}
+\]
+the local rule determines the fourth partition $\lambda$.
+
+Abstractly, a local rule is a map with type signature
+\begin{equation} \label{eq:local-rule}
+  \mathfrak{U}_{\alpha,\beta} :
+    (\mathbb{Z}_{\ge 0}, D(\alpha) \cup D(\beta))
+    \to U(\alpha) \cup U(\beta)
+\end{equation}
+where $U(\mu)$ and $D(\mu)$ denote the sets of partitions obtainable from
+$\mu$ by adding or removing a horizontal strip, respectively.
+
+\subsection{Vertex operators and commutation relations}
+
+In the author's thesis, cylindric plane partitions with profile
+$\pi = (\pi_0, \pi_1, \ldots, \pi_T)$ are encoded algebraically via
+\emph{vertex operators}:
+\begin{align}
+  G^0(z) &= \Omega[Xz] && \text{(Pieri operator: adds horizontal strip)} \\
+  G^1(z) &= \Omega^*[Xz] && \text{(dual Pieri operator: removes horizontal strip)}
+\end{align}
+The generating function for cylindric plane partitions is then expressed as
+the trace of a product:
+\[
+  \sum_{c \in \mathrm{CPP}(\pi)} z^{|c|}
+    = \sum_\mu \langle S_\mu \mid G^{\pi_0}(u_0)\, G^{\pi_1}(u_1)
+      \cdots G^{\pi_T}(u_T)\, D_w\, S_\mu \rangle
+\]
+
+The key algebraic fact is the \textbf{commutation relation}:
+\begin{equation} \label{eq:commutation}
+  \boxed{\Omega^*[Xu]\, \Omega[Xv]
+    = \frac{1}{1-uv}\, \Omega[Xv]\, \Omega^*[Xu]}
+\end{equation}
+
+\subsection{The commutation relation as an R-matrix}
+
+An R-matrix $R \in \End(V \otimes V)$ governs what happens when two objects
+are swapped---two tensor factors, two braid strands, two operators.
+Equation~\eqref{eq:commutation} has precisely this structure:
+
+\begin{itemize}
+  \item The operators $G^0$ and $G^1$ are the ``objects'' being swapped.
+  \item Commuting them past each other produces a scalar factor
+    $\frac{1}{1 - uv}$.
+  \item This scalar factor \emph{is} the R-matrix (in its simplest form:
+    a scalar R-matrix for a 1-dimensional representation).
+\end{itemize}
+
+\subsection{The $(q,t)$-deformation}
+
+In the Macdonald polynomial setting, the commutation relation becomes
+(see~\cite{GHT99, JimboMiwa1983}):
+\begin{equation} \label{eq:qt-commutation}
+  \Omega^*_{q,t}[Xu]\, \Omega_{q,t}[Xv]
+    = \frac{(tuv; q)_\infty}{(uv; q)_\infty}\,
+      \Omega_{q,t}[Xv]\, \Omega^*_{q,t}[Xu]
+\end{equation}
+where $(a;q)_\infty = \prod_{n \ge 0}(1 - aq^n)$.
+
+This is explicitly a vertex operator commutation relation from the quantum
+inverse scattering method---the same Jimbo who co-invented quantum groups
+is a co-author of the relevant reference~\cite{JimboMiwa1983}. The factor
+$(tuv;q)_\infty / (uv;q)_\infty$ is a $q$-deformed R-matrix scalar.
+
+Specialisations:
+\begin{itemize}
+  \item $q = t$: reduces to $\frac{1}{1-uv}$, recovering the Schur case.
+  \item $q = 0$: gives the Hall--Littlewood case.
+  \item General $(q,t)$: the full Macdonald case.
+\end{itemize}
+
+\subsection{Local rules as higher-order functions}
+
+In the author's thesis, the local rule was formulated as a
+\emph{higher-order function}:
+\begin{equation}
+  \mathfrak{L}_i :
+    \bigl((\mathrm{P}, \mathrm{ALCD}(\pi)) \to \mathrm{CPP}(\pi)\bigr)
+    \to
+    \bigl((\mathrm{P}, \mathrm{ALCD}(\pi')) \to \mathrm{CPP}(\pi')\bigr)
+\end{equation}
+where $\pi'$ differs from $\pi$ by swapping the entries at positions $i$
+and $i+1$. That is, $\mathfrak{L}_i$ takes a weight-preserving bijection
+$\psi_\pi$ and returns a new weight-preserving bijection $\psi_{\pi'}$.
+
+Each application of $\mathfrak{L}_i$ corresponds algebraically to commuting
+$G^{\pi_i}(u_i)$ past $G^{\pi_{i+1}}(u_{i+1})$, picking up the R-matrix
+scalar factor. The full bijective proof of Borodin's identity is
+obtained by composing local rules to sort the profile---each step is an
+adjacent transposition, and the product of scalar factors yields the
+generating function.
+
+\subsection{The correspondence}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{Combinatorial (local rules)} & \textbf{Algebraic (R-matrices)} \\
+\hline
+Vertex operators $G^0, G^1$ & Components of a vertex operator algebra \\
+Commutation relation \eqref{eq:commutation} & R-matrix exchange relation \\
+Local rule $\mathfrak{L}_i$ & Combinatorial R-matrix \\
+Composing local rules to sort $\pi$ & Factoring a permutation into $s_i$'s \\
+Scalar factor $\frac{1}{1-u_iu_j}$ & R-matrix eigenvalue \\
+$(q,t)$-deformation \eqref{eq:qt-commutation} & Quantum group R-matrix \\
+Cylindric plane partition profile $\pi$ & Tensor product labelling \\
+Growth diagram & Path in the representation graph \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Connection to knot invariants}
+
+The parallel with the Jones polynomial construction is now visible:
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{Jones polynomial} & \textbf{Local rules / Borodin} \\
+\hline
+Braid group $B_n$ & Symmetric group $S_n$ (profile permutations) \\
+$\sigma_i \mapsto T_i$ (Hecke generator) & $s_i \mapsto \mathfrak{L}_i$ (local rule) \\
+Braid relation $\sigma_i\sigma_{i+1}\sigma_i = \sigma_{i+1}\sigma_i\sigma_{i+1}$ & Yang--Baxter consistency of local rules \\
+Markov trace $\to$ knot invariant & Composition of local rules $\to$ bijection \\
+Quadratic relation $(T_i - q)(T_i + 1) = 0$ & Commutation relation \eqref{eq:commutation} \\
+\hline
+\end{tabular}
+\end{center}
+
+In both cases, a complex global structure (a knot invariant, or a bijection
+between combinatorial objects) is built from simple local swaps, each
+controlled by a commutation/exchange relation. The Hecke algebra is the
+common algebraic framework.
+
+\subsection{Combinatorial R-matrices in crystal theory}
+
+The local rules are closely related to the \emph{combinatorial R-matrix}
+studied by Shimozono, Schilling, and others in the context of
+Kirillov--Reshetikhin crystals:
+\begin{itemize}
+  \item A cylindric plane partition is a highest-weight element in a tensor
+    product of crystal bases.
+  \item The profile $\pi$ determines which crystals are tensored.
+  \item The local rule $\mathfrak{L}_i$ is the combinatorial R-matrix that
+    swaps two adjacent crystal factors.
+  \item The Yang--Baxter equation guarantees that the result is independent
+    of the order of swaps---which is exactly what ensures the bijection is
+    well-defined.
+\end{itemize}
+
+Borodin's identity is a partition function for a solvable lattice model,
+and solvable lattice models are precisely the systems governed by R-matrices
+satisfying Yang--Baxter.
+
+%% ══════════════════════════════════════════════════════════════
+\section{The canonical commutation relations}
+%% ══════════════════════════════════════════════════════════════
+
+There is a further layer of structure. Let $p_1^*$ denote the adjoint
+of multiplication by $p_1 = h_1$ with respect to the Hall inner product.
+The pair $(p_1, p_1^*)$ satisfies the \emph{canonical commutation relations}:
+\[
+  [p_1^*, p_1] = 1
+\]
+This can be understood from the fact that an integer partition always has
+one more outside corner box than inside corner box.
+
+Fomin's original local rule is a bijective proof of the identity:
+\[
+  \langle S_\alpha \mid p_1^* p_1\, S_\beta \rangle
+    = 1 + \langle S_\alpha \mid p_1\, p_1^*\, S_\beta \rangle
+\]
+which is the matrix element version of $[p_1^*, p_1] = 1$.
+
+The Robinson correspondence itself can then be understood algebraically
+via the identity $n! = \sum_\lambda (f^\lambda)^2$, which follows from the
+commutation relations by computing:
+\begin{align*}
+  \sum_\lambda f_\lambda f_\lambda
+    &= \sum_\lambda \langle 1\, p_1^n \mid S_\lambda \rangle
+       \langle S_\lambda \mid p_1^n\, 1 \rangle \\
+    &= \langle 1 \mid (p_1^*)^n (p_1)^n \mid 1 \rangle \\
+    &= n!
+\end{align*}
+where the last step uses $[p_1^*, p_1] = 1$ repeatedly.
+
+This places the Robinson correspondence---and with it the entire edifice
+of growth diagrams and local rules---squarely within the framework of
+operator algebras and commutation relations.
+
+%% ══════════════════════════════════════════════════════════════
+\section{Summary}
+%% ══════════════════════════════════════════════════════════════
+
+\[
+  \boxed{
+  \text{Tangled ropes}
+  \xrightarrow{\text{classify}}
+  \text{Jones polynomial}
+  \xrightarrow{\text{Markov trace}}
+  \text{Hecke algebra } H_n(q)
+  \xrightarrow{\text{$q$-deformation}}
+  \text{Quantum groups}
+  \xrightarrow{\text{R-matrix}}
+  \text{Local rules}
+  }
+\]
+
+The Hecke algebra $H_n(q)$ sits at the intersection of:
+\begin{itemize}
+  \item \textbf{Topology:} braids, knots, the Jones and HOMFLY polynomials.
+  \item \textbf{Algebra:} representations of $\GL_n(\mathbb{F}_q)$ and
+    $p$-adic groups, Kazhdan--Lusztig theory.
+  \item \textbf{Combinatorics:} symmetric functions, Hall--Littlewood and
+    Macdonald polynomials, Kostka--Foulkes polynomials.
+  \item \textbf{Physics:} quantum inverse scattering, integrable lattice
+    models, vertex operator algebras.
+\end{itemize}
+
+The fact that tangled ropes, Hall--Littlewood polynomials, and cylindric
+plane partitions are all controlled by the same algebraic structure is not
+a coincidence. It is because all three are governed by what happens when
+you $q$-deform the symmetric group.
+
+\begin{thebibliography}{99}
+
+\bibitem{RaymerSmith2007}
+D.~M.~Raymer and D.~E.~Smith,
+\emph{Spontaneous knotting of an agitated string},
+Proc.\ Natl.\ Acad.\ Sci.\ USA \textbf{104} (2007), 16432--16437.
+
+\bibitem{Jones1984}
+V.~F.~R.~Jones,
+\emph{A polynomial invariant for knots via von Neumann algebras},
+Bull.\ Amer.\ Math.\ Soc.\ \textbf{12} (1985), 103--111.
+
+\bibitem{KazhdanLusztig1979}
+D.~Kazhdan and G.~Lusztig,
+\emph{Representations of Coxeter groups and Hecke algebras},
+Invent.\ Math.\ \textbf{53} (1979), 165--184.
+
+\bibitem{Drinfeld1986}
+V.~G.~Drinfeld,
+\emph{Quantum groups},
+Proc.\ ICM Berkeley (1986), 798--820.
+
+\bibitem{Jimbo1985}
+M.~Jimbo,
+\emph{A $q$-difference analogue of $U(\mathfrak{g})$ and the Yang--Baxter equation},
+Lett.\ Math.\ Phys.\ \textbf{10} (1985), 63--69.
+
+\bibitem{JimboMiwa1983}
+M.~Jimbo and T.~Miwa,
+\emph{Solitons and infinite-dimensional Lie algebras},
+Publ.\ RIMS, Kyoto Univ.\ \textbf{19} (1983), 943--1001.
+
+\bibitem{Fomin1988}
+S.~Fomin,
+\emph{Generalized Robinson--Schensted--Knuth correspondence},
+Zap.\ Nauchn.\ Sem.\ LOMI \textbf{155} (1988), 156--175.
+
+\bibitem{Langer2013}
+R.~Langer,
+\emph{Cylindric plane partitions, Lambda determinants, Commutants in semicircular systems},
+PhD thesis, Universit\'e Paris-Est, 2013.
+
+\bibitem{Borodin2007}
+A.~Borodin,
+\emph{Periodic Schur process and cylindric partitions},
+Duke Math.\ J.\ \textbf{140} (2007), 391--468.
+
+\bibitem{GHT99}
+A.~M.~Garsia, M.~Haiman, and G.~Tesler,
+\emph{Explicit plethystic formulas for Macdonald $q,t$-Kostka coefficients},
+S\'em.\ Lothar.\ Combin.\ \textbf{42} (1999), Art.\ B42m.
+
+\bibitem{Macdonald1995}
+I.~G.~Macdonald,
+\emph{Symmetric Functions and Hall Polynomials},
+2nd ed., Oxford University Press, 1995.
+
+\bibitem{Witten1989}
+E.~Witten,
+\emph{Quantum field theory and the Jones polynomial},
+Comm.\ Math.\ Phys.\ \textbf{121} (1989), 351--399.
+
+\bibitem{ReshetikhinTuraev1990}
+N.~Yu.~Reshetikhin and V.~G.~Turaev,
+\emph{Ribbon graphs and their invariants derived from quantum groups},
+Comm.\ Math.\ Phys.\ \textbf{127} (1990), 1--26.
+
+\end{thebibliography}
+
+\end{document}
